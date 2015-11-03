@@ -1,0 +1,65 @@
+---
+title: "Practical Machine Learning - Course Project"
+output: html_document
+---
+
+```{r}
+setwd("~/EDU/Coursera/coursera-projects/predmachlearn-034-project")
+library(caret)
+```
+
+# Question
+
+# Prepare Data
+Load the data and split it into a training dataset and a test dataset.
+```{r}
+pml_data <- read.csv("~/EDU/Coursera/coursera-projects/predmachlearn-034-project/data/pml-training.csv", stringsAsFactors=TRUE)
+pml_data <- pml_data[,6:160]
+head(pml_data)
+inTrain <- createDataPartition(y=pml_data$classe, p=0.6, list=FALSE)
+
+training <- pml_data[inTrain,]
+testing  <- pml_data[-inTrain,]
+```
+Split the data in a training set and a testing set.
+```{r}
+inTrain <- createDataPartition(y=pml_data$classe, p=0.6, list=FALSE)
+
+training <- pml_data[inTrain,]
+testing  <- pml_data[-inTrain,]
+```
+
+
+```{r}
+folds <- createFolds(y=pml_data$classe, k=10, list=TRUE, returnTrain=TRUE)
+
+sapply(folds, length)
+```
+# Fit Model
+
+```{r}
+set.seed(3125)
+
+modelFit <- train(classe ~ ., data=training, method="glm")
+modelFit
+```
+
+
+```{r}
+predictions <- predict(modelFit, newdata=testing)
+confusionMatrix(predictions, testing$classe)
+```
+
+# Conclusion
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
