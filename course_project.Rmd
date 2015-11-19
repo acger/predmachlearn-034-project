@@ -4,62 +4,101 @@ output: html_document
 ---
 
 ```{r}
-setwd("~/EDU/Coursera/coursera-projects/predmachlearn-034-project")
 library(caret)
 ```
 
-# Question
+This report is about how to predict the kind of an excersize by analyzing the movement data.
 
-# Prepare Data
-Load the data and split it into a training dataset and a test dataset.
+# Load and Prepare the Data
+
+## Load the Data
+Download the dataset and load it in memory.
 ```{r}
-pml_data <- read.csv("~/EDU/Coursera/coursera-projects/predmachlearn-034-project/data/pml-training.csv", stringsAsFactors=TRUE)
-pml_data <- pml_data[,6:160]
-head(pml_data)
-inTrain <- createDataPartition(y=pml_data$classe, p=0.6, list=FALSE)
-
-training <- pml_data[inTrain,]
-testing  <- pml_data[-inTrain,]
+pml_training_data <- read.csv("data/pml-training.csv", na.strings=c("NA","#DIV/0!",""), stringsAsFactors = TRUE)
+pml_testing_data  <- read.csv("data/pml-training.csv", na.strings=c("NA","#DIV/0!",""), stringsAsFactors = TRUE)
 ```
-Split the data in a training set and a testing set.
-```{r}
-inTrain <- createDataPartition(y=pml_data$classe, p=0.6, list=FALSE)
-
-training <- pml_data[inTrain,]
-testing  <- pml_data[-inTrain,]
-```
-
+## Clean the Data
+The first seven rows are removed as they are id columns and data to identify groups of rows.
 
 ```{r}
-folds <- createFolds(y=pml_data$classe, k=10, list=TRUE, returnTrain=TRUE)
+# Remove id columns
+trainingData <- pml_training_data[, -c(1:7)]
 
-sapply(folds, length)
+# remove columns with a variance near zero
+nearZeroVarColumns <- nearZeroVar( trainingData )
+trainingData <- trainingData[, -nearZeroVarColumns]
+
+# Remove columns which contains more than 97 percent NAs
+naColumns <- sapply(trainingData, function(x) mean(is.na(x))) > 0.97
+trainingData <- trainingData[, naColumns == FALSE]
 ```
+
+
+## Split the data in a training set and a testing set.
+
+```{r}
+inTrain <- createDataPartition(y=trainingData$classe, p=0.08, list=FALSE)
+
+training <- trainingData[inTrain,]
+testing  <- trainingData[-inTrain,]
+```
+
+# Preprocessing
+
+```{r}
+preProcValues <- preProcess(training, method = c("center", "scale"))
+scaledTrain   <- predict(preProcValues, training)
+scaledTesting <- predict(preProcValues, testing)
+```
+
 # Fit Model
 
-```{r}
-set.seed(3125)
 
-modelFit <- train(classe ~ ., data=training, method="glm")
-modelFit
+## CART Model
+```{r}
+set.seed(9764)
+fitControl <- trainControl(method = "cv", number = 3)
+
+rpartFit <- train(classe ~ ., data = scaledTrain, method = "rpart", trControl = fitControl)
+rpartFit
+
+
+predictions <- predict(rpartFit, newdata = scaledTesting)
+confusionMatrix(predictions, scaledTesting$classe)
 ```
 
-
+## Random Forrest
 ```{r}
-predictions <- predict(modelFit, newdata=testing)
-confusionMatrix(predictions, testing$classe)
+set.seed(9764)
+fitControl <- trainControl(method = "cv", number = 3)
+
+rfFit <- train(classe ~ ., data = scaledTrain, method = "rf", trControl = fitControl)
+rfFit
+
+
+predictions <- predict(rfFit, newdata = scaledTesting)
+confusionMatrix(predictions, scaledTesting$classe)
 ```
+
+# ROC-Curve
 
 # Conclusion
 
+# Create Submission
+
+## Perform Data Cleaning
+The data must be cleaned in the same way than the training set was cleaned.
+
 ```{r}
-summary(cars)
+# Remove id columns
+testingData <- pml_testing_data[, -c(1:7)]
+testingData <- testingData[, -nearZeroVarColumns]
+testingData <- testingData[, naColumns == FALSE]
+
+scaledTestSubmission   <- predict(preProcValues, testingData)
 ```
 
-You can also embed plots, for example:
+```{r}
 
-```{r, echo=FALSE}
-plot(cars)
+testPredictions <- predict(rfFit, newdata = scaledTestSubmission)
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
