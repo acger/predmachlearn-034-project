@@ -5,6 +5,7 @@ output: html_document
 
 ```{r}
 library(caret)
+library(pROC)
 ```
 
 This report is about how to predict the kind of an excersize by analyzing the movement data.
@@ -56,7 +57,7 @@ scaledTesting <- predict(preProcValues, testing)
 ## CART Model
 ```{r}
 set.seed(9764)
-fitControl <- trainControl(method = "cv", number = 3)
+fitControl <- trainControl(method = "cv", number = 3, savePredictions = TRUE)
 
 rpartFit <- train(classe ~ ., data = scaledTrain, method = "rpart", trControl = fitControl)
 rpartFit
