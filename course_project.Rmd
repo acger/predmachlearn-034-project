@@ -15,7 +15,6 @@ This report is about how to predict the kind of an excersize by analyzing the mo
 Download the dataset and load it in memory.
 ```{r}
 pml_training_data <- read.csv("data/pml-training.csv", na.strings=c("NA","#DIV/0!",""), stringsAsFactors = TRUE)
-pml_testing_data  <- read.csv("data/pml-training.csv", na.strings=c("NA","#DIV/0!",""), stringsAsFactors = TRUE)
 ```
 ## Clean the Data
 The first seven rows are removed as they are id columns and data to identify groups of rows.
@@ -37,7 +36,7 @@ trainingData <- trainingData[, naColumns == FALSE]
 ## Split the data in a training set and a testing set.
 
 ```{r}
-inTrain <- createDataPartition(y=trainingData$classe, p=0.08, list=FALSE)
+inTrain <- createDataPartition(y=trainingData$classe, p=0.6, list=FALSE)
 
 training <- trainingData[inTrain,]
 testing  <- trainingData[-inTrain,]
@@ -90,6 +89,7 @@ confusionMatrix(predictions, scaledTesting$classe)
 The data must be cleaned in the same way than the training set was cleaned.
 
 ```{r}
+pml_testing_data  <- read.csv("data/pml-testing.csv", na.strings=c("NA","#DIV/0!",""), stringsAsFactors = TRUE)
 # Remove id columns
 testingData <- pml_testing_data[, -c(1:7)]
 testingData <- testingData[, -nearZeroVarColumns]
@@ -101,4 +101,5 @@ scaledTestSubmission   <- predict(preProcValues, testingData)
 ```{r}
 
 testPredictions <- predict(rfFit, newdata = scaledTestSubmission)
+write.csv(testPredictions, file = "submission.csv")
 ```

@@ -73,8 +73,7 @@ img {
 <div id="load-the-data" class="section level2">
 <h2>Load the Data</h2>
 <p>Download the dataset and load it in memory.</p>
-<pre class="r"><code>pml_training_data &lt;- read.csv(&quot;data/pml-training.csv&quot;, na.strings=c(&quot;NA&quot;,&quot;#DIV/0!&quot;,&quot;&quot;), stringsAsFactors = TRUE)
-pml_testing_data  &lt;- read.csv(&quot;data/pml-training.csv&quot;, na.strings=c(&quot;NA&quot;,&quot;#DIV/0!&quot;,&quot;&quot;), stringsAsFactors = TRUE)</code></pre>
+<pre class="r"><code>pml_training_data &lt;- read.csv(&quot;data/pml-training.csv&quot;, na.strings=c(&quot;NA&quot;,&quot;#DIV/0!&quot;,&quot;&quot;), stringsAsFactors = TRUE)</code></pre>
 </div>
 <div id="clean-the-data" class="section level2">
 <h2>Clean the Data</h2>
@@ -92,7 +91,7 @@ trainingData &lt;- trainingData[, naColumns == FALSE]</code></pre>
 </div>
 <div id="split-the-data-in-a-training-set-and-a-testing-set." class="section level2">
 <h2>Split the data in a training set and a testing set.</h2>
-<pre class="r"><code>inTrain &lt;- createDataPartition(y=trainingData$classe, p=0.08, list=FALSE)
+<pre class="r"><code>inTrain &lt;- createDataPartition(y=trainingData$classe, p=0.6, list=FALSE)
 
 training &lt;- trainingData[inTrain,]
 testing  &lt;- trainingData[-inTrain,]</code></pre>
@@ -116,55 +115,55 @@ rpartFit &lt;- train(classe ~ ., data = scaledTrain, method = &quot;rpart&quot;,
 <pre class="r"><code>rpartFit</code></pre>
 <pre><code>## CART 
 ## 
-## 1572 samples
-##   52 predictor
-##    5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 11776 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## No pre-processing
 ## Resampling: Cross-Validated (3 fold) 
-## Summary of sample sizes: 1047, 1048, 1049 
+## Summary of sample sizes: 7850, 7851, 7851 
 ## Resampling results across tuning parameters:
 ## 
 ##   cp          Accuracy   Kappa       Accuracy SD  Kappa SD  
-##   0.02844444  0.5343355  0.39365003  0.02333473   0.02962214
-##   0.06488889  0.4491942  0.26685765  0.07413113   0.12603433
-##   0.12088889  0.3410223  0.08690791  0.04956502   0.07530313
+##   0.03322259  0.5241131  0.38646661  0.03863160   0.06354932
+##   0.05873280  0.4069328  0.19388754  0.06946420   0.11818065
+##   0.11663503  0.3114764  0.04135906  0.04701679   0.07163600
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was cp = 0.02844444.</code></pre>
+## The final value used for the model was cp = 0.03322259.</code></pre>
 <pre class="r"><code>predictions &lt;- predict(rpartFit, newdata = scaledTesting)
 confusionMatrix(predictions, scaledTesting$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 4609 1292 1426 1267  445
-##          B  118 1249  145  575  507
-##          C  395  952 1577 1116  874
+##          A 2021  605  615  547  213
+##          B   36  532   40  251  194
+##          C  171  381  713  488  397
 ##          D    0    0    0    0    0
-##          E   11    0    0    0 1492
+##          E    4    0    0    0  638
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.4946          
-##                  95% CI : (0.4873, 0.5019)
-##     No Information Rate : 0.2844          
+##                Accuracy : 0.4976          
+##                  95% CI : (0.4865, 0.5087)
+##     No Information Rate : 0.2845          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.341           
+##                   Kappa : 0.3442          
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.8979   0.3576  0.50095   0.0000  0.44967
-## Specificity            0.6570   0.9076  0.77607   1.0000  0.99925
-## Pos Pred Value         0.5099   0.4815  0.32092      NaN  0.99268
-## Neg Pred Value         0.9418   0.8548  0.88040   0.8361  0.88965
-## Prevalence             0.2844   0.1935  0.17440   0.1639  0.18382
-## Detection Rate         0.2553   0.0692  0.08737   0.0000  0.08266
-## Detection Prevalence   0.5008   0.1437  0.27224   0.0000  0.08327
-## Balanced Accuracy      0.7775   0.6326  0.63851   0.5000  0.72446</code></pre>
+## Sensitivity            0.9055  0.35046  0.52120   0.0000  0.44244
+## Specificity            0.6473  0.91767  0.77817   1.0000  0.99938
+## Pos Pred Value         0.5051  0.50522  0.33163      NaN  0.99377
+## Neg Pred Value         0.9451  0.85485  0.88501   0.8361  0.88840
+## Prevalence             0.2845  0.19347  0.17436   0.1639  0.18379
+## Detection Rate         0.2576  0.06781  0.09087   0.0000  0.08132
+## Detection Prevalence   0.5099  0.13421  0.27402   0.0000  0.08183
+## Balanced Accuracy      0.7764  0.63406  0.64969   0.5000  0.72091</code></pre>
 </div>
 <div id="random-forrest" class="section level2">
 <h2>Random Forrest</h2>
@@ -178,55 +177,55 @@ rfFit &lt;- train(classe ~ ., data = scaledTrain, method = &quot;rf&quot;, trCon
 <pre class="r"><code>rfFit</code></pre>
 <pre><code>## Random Forest 
 ## 
-## 1572 samples
-##   52 predictor
-##    5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 11776 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## No pre-processing
 ## Resampling: Cross-Validated (3 fold) 
-## Summary of sample sizes: 1047, 1048, 1049 
+## Summary of sample sizes: 7850, 7851, 7851 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   
-##    2    0.9020402  0.8760284  0.004242238  0.005342913
-##   27    0.9058388  0.8808670  0.010691317  0.013579982
-##   52    0.8893042  0.8598922  0.007082542  0.008892501
+##    2    0.9859036  0.9821652  0.002863200  0.003620743
+##   27    0.9854787  0.9816300  0.003005071  0.003797806
+##   52    0.9797041  0.9743227  0.004388042  0.005546990
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 27.</code></pre>
+## The final value used for the model was mtry = 2.</code></pre>
 <pre class="r"><code>predictions &lt;- predict(rfFit, newdata = scaledTesting)
 confusionMatrix(predictions, scaledTesting$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 5061  209   12    8    7
-##          B   40 3098  167    3   51
-##          C   25  179 2923  176   71
-##          D    6    5   45 2743   48
-##          E    1    2    1   28 3141
+##          A 2223    5    0    0    0
+##          B    7 1505   13    0    0
+##          C    2    8 1351   14    0
+##          D    0    0    4 1270    2
+##          E    0    0    0    2 1440
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9399          
-##                  95% CI : (0.9364, 0.9434)
-##     No Information Rate : 0.2844          
+##                Accuracy : 0.9927          
+##                  95% CI : (0.9906, 0.9945)
+##     No Information Rate : 0.2845          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.924           
-##  Mcnemar's Test P-Value : &lt; 2.2e-16       
+##                   Kappa : 0.9908          
+##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9860   0.8869   0.9285   0.9273   0.9467
-## Specificity            0.9817   0.9821   0.9697   0.9931   0.9978
-## Pos Pred Value         0.9554   0.9223   0.8663   0.9635   0.9899
-## Neg Pred Value         0.9944   0.9731   0.9847   0.9859   0.9881
-## Prevalence             0.2844   0.1935   0.1744   0.1639   0.1838
-## Detection Rate         0.2804   0.1716   0.1619   0.1520   0.1740
-## Detection Prevalence   0.2935   0.1861   0.1869   0.1577   0.1758
-## Balanced Accuracy      0.9839   0.9345   0.9491   0.9602   0.9722</code></pre>
+## Sensitivity            0.9960   0.9914   0.9876   0.9876   0.9986
+## Specificity            0.9991   0.9968   0.9963   0.9991   0.9997
+## Pos Pred Value         0.9978   0.9869   0.9825   0.9953   0.9986
+## Neg Pred Value         0.9984   0.9979   0.9974   0.9976   0.9997
+## Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+## Detection Rate         0.2833   0.1918   0.1722   0.1619   0.1835
+## Detection Prevalence   0.2840   0.1944   0.1752   0.1626   0.1838
+## Balanced Accuracy      0.9975   0.9941   0.9919   0.9933   0.9992</code></pre>
 </div>
 </div>
 <div id="roc-curve" class="section level1">
@@ -240,13 +239,15 @@ confusionMatrix(predictions, scaledTesting$classe)</code></pre>
 <div id="perform-data-cleaning" class="section level2">
 <h2>Perform Data Cleaning</h2>
 <p>The data must be cleaned in the same way than the training set was cleaned.</p>
-<pre class="r"><code># Remove id columns
+<pre class="r"><code>pml_testing_data  &lt;- read.csv(&quot;data/pml-testing.csv&quot;, na.strings=c(&quot;NA&quot;,&quot;#DIV/0!&quot;,&quot;&quot;), stringsAsFactors = TRUE)
+# Remove id columns
 testingData &lt;- pml_testing_data[, -c(1:7)]
 testingData &lt;- testingData[, -nearZeroVarColumns]
 testingData &lt;- testingData[, naColumns == FALSE]
 
 scaledTestSubmission   &lt;- predict(preProcValues, testingData)</code></pre>
-<pre class="r"><code>testPredictions &lt;- predict(rfFit, newdata = scaledTestSubmission)</code></pre>
+<pre class="r"><code>testPredictions &lt;- predict(rfFit, newdata = scaledTestSubmission)
+write.csv(testPredictions, file = &quot;submission.csv&quot;)</code></pre>
 </div>
 </div>
 
