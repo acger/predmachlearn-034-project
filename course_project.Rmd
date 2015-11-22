@@ -8,7 +8,7 @@ library(caret)
 library(pROC)
 ```
 
-This report is about how to predict the kind of an excersize by analyzing the movement data.
+This report is about how to predict the kind of an excersize by analyzing the movement data. The report fits a linear model and a random forrest and compares the performance of both models. The better model is taken to predict the values for submission.
 
 # Load and Prepare the Data
 
@@ -45,6 +45,7 @@ testing  <- trainingData[-inTrain,]
 
 # Preprocessing
 
+The fitting of the linear model works better if the values are centered (substracted by the mean) and scaled (divided by the standard deviation).
 ```{r}
 preProcValues <- preProcess(training, method = c("center", "scale"))
 scaledTrain   <- predict(preProcValues, training)
@@ -53,6 +54,9 @@ scaledTesting <- predict(preProcValues, testing)
 
 # Fit Model
 
+The strategy to fit two models, a simple linear model and a random forrest. For both models the out of sample error rate is calculated using cross validation. Finally the models are validated with the testing data.
+
+There are two models fitted because linear models work quite well in many cases and are simple to interpret. Random forrest models perform very good if there are many variables and the data contain none linear relationships.
 
 ## CART Model
 ```{r}
@@ -79,10 +83,6 @@ rfFit
 predictions <- predict(rfFit, newdata = scaledTesting)
 confusionMatrix(predictions, scaledTesting$classe)
 ```
-
-# ROC-Curve
-
-# Conclusion
 
 # Create Submission
 
