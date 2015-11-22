@@ -5,7 +5,6 @@ output: html_document
 
 ```{r}
 library(caret)
-library(pROC)
 ```
 
 This report is about how to predict the kind of an excersize by analyzing the movement data. The report fits a linear model and a random forrest and compares the performance of both models. The better model is taken to predict the values for submission.
@@ -58,18 +57,26 @@ The strategy to fit two models, a simple linear model and a random forrest. For 
 
 There are two models fitted because linear models work quite well in many cases and are simple to interpret. Random forrest models perform very good if there are many variables and the data contain none linear relationships.
 
+The models are validated with cross validation. This method provides a good estimate about how the model will perform on new data and shows overfitting.
+
 ## CART Model
 ```{r}
 set.seed(9764)
 fitControl <- trainControl(method = "cv", number = 3, savePredictions = TRUE)
 
 rpartFit <- train(classe ~ ., data = scaledTrain, method = "rpart", trControl = fitControl)
-rpartFit
+print(rpartFit)
 
 
 predictions <- predict(rpartFit, newdata = scaledTesting)
-confusionMatrix(predictions, scaledTesting$classe)
+cfm <- confusionMatrix(predictions, scaledTesting$classe)
+print(cfm)
+
+# Out of sample error rate
+ooer <- 1 - as.numeric(cfm$overall[1])
+ooer
 ```
+The estimation of the out of sample error for this model is `r ooer` which is quite high. This may have to do with missing terms in the the formula.
 
 ## Random Forrest
 ```{r}
@@ -77,12 +84,22 @@ set.seed(9764)
 fitControl <- trainControl(method = "cv", number = 3)
 
 rfFit <- train(classe ~ ., data = scaledTrain, method = "rf", trControl = fitControl)
-rfFit
+print(rfFit)
 
 
 predictions <- predict(rfFit, newdata = scaledTesting)
-confusionMatrix(predictions, scaledTesting$classe)
+cfm <- confusionMatrix(predictions, scaledTesting$classe)
+print(cfm)
+
+# Out of sample error rate
+ooer <- 1 - as.numeric(cfm$overall[1])
+ooer
 ```
+The estimation of the out of sample error for this model is `r ooer`. This is a good result. Compared with a linear model, random forrest need no tuning of the formula and perform quite good out of the box.
+
+# Conclussion
+
+The random forrest model performs very good on the provided data. For the model only 53 columns of the data are used because the others contains not enough signal or unusable data.
 
 # Create Submission
 
@@ -97,7 +114,9 @@ testingData <- testingData[, -nearZeroVarColumns]
 testingData <- testingData[, naColumns == FALSE]
 
 scaledTestSubmission   <- predict(preProcValues, testingData)
-
+```
+## Predict the submission results 
+```{r}
 submissionPredictions <- predict(rfFit, newdata = scaledTestSubmission)
 ```
 

@@ -67,14 +67,6 @@ img {
 <pre class="r"><code>library(caret)</code></pre>
 <pre><code>## Loading required package: lattice
 ## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>library(pROC)</code></pre>
-<pre><code>## Type 'citation(&quot;pROC&quot;)' for a citation.
-## 
-## Attaching package: 'pROC'
-## 
-## Die folgenden Objekte sind maskiert von 'package:stats':
-## 
-##     cov, smooth, var</code></pre>
 <p>This report is about how to predict the kind of an excersize by analyzing the movement data. The report fits a linear model and a random forrest and compares the performance of both models. The better model is taken to predict the values for submission.</p>
 <div id="load-and-prepare-the-data" class="section level1">
 <h1>Load and Prepare the Data</h1>
@@ -115,6 +107,8 @@ scaledTesting &lt;- predict(preProcValues, testing)</code></pre>
 <div id="fit-model" class="section level1">
 <h1>Fit Model</h1>
 <p>The strategy to fit two models, a simple linear model and a random forrest. For both models the out of sample error rate is calculated using cross validation. Finally the models are validated with the testing data.</p>
+<p>There are two models fitted because linear models work quite well in many cases and are simple to interpret. Random forrest models perform very good if there are many variables and the data contain none linear relationships.</p>
+<p>The models are validated with cross validation. This method provides a good estimate about how the model will perform on new data and shows overfitting.</p>
 <div id="cart-model" class="section level2">
 <h2>CART Model</h2>
 <pre class="r"><code>set.seed(9764)
@@ -122,7 +116,7 @@ fitControl &lt;- trainControl(method = &quot;cv&quot;, number = 3, savePredictio
 
 rpartFit &lt;- train(classe ~ ., data = scaledTrain, method = &quot;rpart&quot;, trControl = fitControl)</code></pre>
 <pre><code>## Loading required package: rpart</code></pre>
-<pre class="r"><code>rpartFit</code></pre>
+<pre class="r"><code>print(rpartFit)</code></pre>
 <pre><code>## CART 
 ## 
 ## 11776 samples
@@ -135,45 +129,51 @@ rpartFit &lt;- train(classe ~ ., data = scaledTrain, method = &quot;rpart&quot;,
 ## Resampling results across tuning parameters:
 ## 
 ##   cp          Accuracy   Kappa       Accuracy SD  Kappa SD  
-##   0.03262933  0.5311625  0.39413295  0.02617678   0.04611790
-##   0.05960291  0.4091409  0.19700783  0.07109768   0.12037670
-##   0.11568581  0.3385676  0.08258518  0.04697382   0.07152656
+##   0.03749407  0.5089165  0.35833251  0.00772268   0.01051124
+##   0.06173865  0.4093108  0.19688904  0.07336833   0.12305520
+##   0.11521120  0.3384828  0.08275552  0.04689664   0.07166938
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was cp = 0.03262933.</code></pre>
+## The final value used for the model was cp = 0.03749407.</code></pre>
 <pre class="r"><code>predictions &lt;- predict(rpartFit, newdata = scaledTesting)
-confusionMatrix(predictions, scaledTesting$classe)</code></pre>
+cfm &lt;- confusionMatrix(predictions, scaledTesting$classe)
+print(cfm)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2029  614  646  558  215
-##          B   40  540   49  219  184
-##          C  157  364  673  509  395
+##          A 2002  607  638  573  196
+##          B   48  522   44  231  210
+##          C  175  389  686  482  383
 ##          D    0    0    0    0    0
-##          E    6    0    0    0  648
+##          E    7    0    0    0  653
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.4958          
-##                  95% CI : (0.4847, 0.5069)
+##                Accuracy : 0.4924          
+##                  95% CI : (0.4812, 0.5035)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.3412          
+##                   Kappa : 0.3372          
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9091  0.35573  0.49196   0.0000  0.44938
-## Specificity            0.6379  0.92225  0.78002   1.0000  0.99906
-## Pos Pred Value         0.4995  0.52326  0.32078      NaN  0.99083
-## Neg Pred Value         0.9464  0.85647  0.87909   0.8361  0.88960
+## Sensitivity            0.8970  0.34387  0.50146   0.0000  0.45284
+## Specificity            0.6413  0.91577  0.77941   1.0000  0.99891
+## Pos Pred Value         0.4985  0.49479  0.32435      NaN  0.98939
+## Neg Pred Value         0.9399  0.85334  0.88100   0.8361  0.89020
 ## Prevalence             0.2845  0.19347  0.17436   0.1639  0.18379
-## Detection Rate         0.2586  0.06882  0.08578   0.0000  0.08259
-## Detection Prevalence   0.5177  0.13153  0.26740   0.0000  0.08335
-## Balanced Accuracy      0.7735  0.63899  0.63599   0.5000  0.72422</code></pre>
+## Detection Rate         0.2552  0.06653  0.08743   0.0000  0.08323
+## Detection Prevalence   0.5119  0.13446  0.26956   0.0000  0.08412
+## Balanced Accuracy      0.7691  0.62982  0.64043   0.5000  0.72588</code></pre>
+<pre class="r"><code># Out of sample error rate
+ooer &lt;- 1 - as.numeric(cfm$overall[1])
+ooer</code></pre>
+<pre><code>## [1] 0.5076472</code></pre>
+<p>The estimation of the out of sample error for this model is 0.5076472 which is quite high. This may have to do with missing terms in the the formula.</p>
 </div>
 <div id="random-forrest" class="section level2">
 <h2>Random Forrest</h2>
@@ -184,7 +184,7 @@ rfFit &lt;- train(classe ~ ., data = scaledTrain, method = &quot;rf&quot;, trCon
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-12
 ## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>rfFit</code></pre>
+<pre class="r"><code>print(rfFit)</code></pre>
 <pre><code>## Random Forest 
 ## 
 ## 11776 samples
@@ -196,47 +196,57 @@ rfFit &lt;- train(classe ~ ., data = scaledTrain, method = &quot;rf&quot;, trCon
 ## Summary of sample sizes: 7850, 7851, 7851 
 ## Resampling results across tuning parameters:
 ## 
-##   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   
-##    2    0.9840356  0.9798017  0.002860976  0.003622496
-##   27    0.9856486  0.9818456  0.001405068  0.001774619
-##   52    0.9794493  0.9740051  0.005200305  0.006571632
+##   mtry  Accuracy   Kappa      Accuracy SD   Kappa SD    
+##    2    0.9846299  0.9805543  0.0015337107  0.0019388842
+##   27    0.9845448  0.9804479  0.0005309886  0.0006732828
+##   52    0.9774964  0.9715305  0.0041518168  0.0052477933
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 27.</code></pre>
+## The final value used for the model was mtry = 2.</code></pre>
 <pre class="r"><code>predictions &lt;- predict(rfFit, newdata = scaledTesting)
-confusionMatrix(predictions, scaledTesting$classe)</code></pre>
+cfm &lt;- confusionMatrix(predictions, scaledTesting$classe)
+print(cfm)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2226   13    0    0    0
-##          B    3 1500   13    1    2
-##          C    2    4 1352   20    3
-##          D    0    1    3 1265    3
-##          E    1    0    0    0 1434
+##          A 2232   12    0    0    0
+##          B    0 1503   13    0    0
+##          C    0    3 1355   30    0
+##          D    0    0    0 1255    4
+##          E    0    0    0    1 1438
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9912          
-##                  95% CI : (0.9889, 0.9932)
+##                Accuracy : 0.992           
+##                  95% CI : (0.9897, 0.9938)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.9889          
+##                   Kappa : 0.9898          
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9973   0.9881   0.9883   0.9837   0.9945
-## Specificity            0.9977   0.9970   0.9955   0.9989   0.9998
-## Pos Pred Value         0.9942   0.9875   0.9790   0.9945   0.9993
-## Neg Pred Value         0.9989   0.9972   0.9975   0.9968   0.9988
+## Sensitivity            1.0000   0.9901   0.9905   0.9759   0.9972
+## Specificity            0.9979   0.9979   0.9949   0.9994   0.9998
+## Pos Pred Value         0.9947   0.9914   0.9762   0.9968   0.9993
+## Neg Pred Value         1.0000   0.9976   0.9980   0.9953   0.9994
 ## Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
-## Detection Rate         0.2837   0.1912   0.1723   0.1612   0.1828
-## Detection Prevalence   0.2854   0.1936   0.1760   0.1621   0.1829
-## Balanced Accuracy      0.9975   0.9926   0.9919   0.9913   0.9971</code></pre>
+## Detection Rate         0.2845   0.1916   0.1727   0.1600   0.1833
+## Detection Prevalence   0.2860   0.1932   0.1769   0.1605   0.1834
+## Balanced Accuracy      0.9989   0.9940   0.9927   0.9876   0.9985</code></pre>
+<pre class="r"><code># Out of sample error rate
+ooer &lt;- 1 - as.numeric(cfm$overall[1])
+ooer</code></pre>
+<pre><code>## [1] 0.008029569</code></pre>
+<p>The estimation of the out of sample error for this model is 0.0080296. This is a good result. Compared with a linear model, random forrest need no tuning of the formula and perform quite good out of the box.</p>
 </div>
+</div>
+<div id="conclussion" class="section level1">
+<h1>Conclussion</h1>
+<p>The random forrest model performs very good on the provided data. For the model only 53 columns of the data are used because the others contains not enough signal or unusable data.</p>
 </div>
 <div id="create-submission" class="section level1">
 <h1>Create Submission</h1>
@@ -249,9 +259,11 @@ testingData &lt;- pml_testing_data[, -c(1:7)]
 testingData &lt;- testingData[, -nearZeroVarColumns]
 testingData &lt;- testingData[, naColumns == FALSE]
 
-scaledTestSubmission   &lt;- predict(preProcValues, testingData)
-
-submissionPredictions &lt;- predict(rfFit, newdata = scaledTestSubmission)</code></pre>
+scaledTestSubmission   &lt;- predict(preProcValues, testingData)</code></pre>
+</div>
+<div id="predict-the-submission-results" class="section level2">
+<h2>Predict the submission results</h2>
+<pre class="r"><code>submissionPredictions &lt;- predict(rfFit, newdata = scaledTestSubmission)</code></pre>
 </div>
 <div id="write-submission-files" class="section level2">
 <h2>Write submission files</h2>
